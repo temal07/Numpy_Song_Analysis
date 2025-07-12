@@ -80,17 +80,24 @@ if track_url_input:
         # Extract track ID from URL
         track_id = track_url_input.split("/track/")[1].split("?")[0]
         
-        # Validate the track exists
-        sp.track(track_id)
+        # Get the track data
+        song_data = sp.track(track_id)
         
         # Check if track is in liked songs
         in_liked = sp.current_user_saved_tracks_contains([track_id])[0]
+
     except (SpotifyException, IndexError):
         st.error("Invalid Track URL. Please try again.")
+
     else:
         if in_liked:
             st.info("This track is already in your Liked Songs.")
         else:
+            # Access song data safely now
+            st.write(f"**{song_data['name']} by {', '.join([artist['name'] for artist in song_data['artists']])}**")
+            st.image(song_data['album']['images'][0]['url'], width=100)
+
             if st.button("Add to Liked Songs"):
                 sp.current_user_saved_tracks_add([track_id])
                 st.success("Track added to your Liked Songs!")
+
