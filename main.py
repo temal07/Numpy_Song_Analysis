@@ -5,42 +5,39 @@ from spotipy.exceptions import SpotifyException
 
 # ------------- PKCE AUTH SETUP -------------
 
+
 CLIENT_ID = st.secrets["CLIENT_ID"]
 REDIRECT_URI = st.secrets["REDIRECT_URI"]
-"""
-sp_oauth = SpotifyPKCE(
-    client_id=CLIENT_ID,
-    redirect_uri=REDIRECT_URI,
-    scope="user-library-read user-library-modify user-read-currently-playing"
-)
-
-"""
+SCOPE = "user-library-read user-library-modify user-read-currently-playing"
 
 if "sp_oauth" not in st.session_state:
     st.session_state.sp_oauth = SpotifyPKCE(
         client_id=CLIENT_ID,
         redirect_uri=REDIRECT_URI,
-        scope="user-library-read user-library-modify user-read-currently-playing"
+        scope=SCOPE,
     )
 
 sp_oauth = st.session_state.sp_oauth
 
-# Handle callback after redirect
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 
 if "code" in query_params:
     code = query_params["code"][0]
     try:
+        # Exchange code for token using the same sp_oauth (which has code_verifier)
         token_info = sp_oauth.get_access_token(code)
         access_token = token_info["access_token"]
         sp = spotipy.Spotify(auth=access_token)
+
+        # Now your app logic with sp below
+        st.write("Authentication successful! You can now use the Spotify API.")
+
     except Exception as e:
         st.error(f"Auth Error: {e}")
         st.stop()
 else:
     auth_url = sp_oauth.get_authorize_url()
-    st.write("## 🎵 Authorize this app to access your Spotify account")
-    st.markdown(f"[Click here to authorize 🎶]({auth_url})")
+    st.markdown(f"[Authorize with Spotify]({auth_url})")
     st.stop()
 # ------------- APP UI + FUNCTIONALITY -------------
 
