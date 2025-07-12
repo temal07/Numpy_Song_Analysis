@@ -73,18 +73,24 @@ if input_song_url:
 st.markdown("---")
 
 # ------------- Check/Add Song to Liked Songs -------------
-track_id_input = st.text_input("Enter Track ID to check if in Liked Songs:")
+track_url_input = st.text_input("Enter Track URL to check if in Liked Songs:")
 
-if track_id_input:
+if track_url_input:
     try:
-        sp.track(track_id_input)  # Validate track ID
-        in_liked = sp.current_user_saved_tracks_contains([track_id_input])[0]
-    except SpotifyException:
-        st.error("Invalid Track ID. Please try again.")
+        # Extract track ID from URL
+        track_id = track_url_input.split("/track/")[1].split("?")[0]
+        
+        # Validate the track exists
+        sp.track(track_id)
+        
+        # Check if track is in liked songs
+        in_liked = sp.current_user_saved_tracks_contains([track_id])[0]
+    except (SpotifyException, IndexError):
+        st.error("Invalid Track URL. Please try again.")
     else:
         if in_liked:
             st.info("This track is already in your Liked Songs.")
         else:
             if st.button("Add to Liked Songs"):
-                sp.current_user_saved_tracks_add([track_id_input])
+                sp.current_user_saved_tracks_add([track_id])
                 st.success("Track added to your Liked Songs!")
