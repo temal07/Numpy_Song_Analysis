@@ -5,6 +5,10 @@ from spotipy.exceptions import SpotifyException
 
 # ------------- PKCE AUTH SETUP -------------
 
+import streamlit as st
+import spotipy
+from spotipy.oauth2 import SpotifyPKCE
+
 CLIENT_ID = st.secrets["CLIENT_ID"]
 REDIRECT_URI = st.secrets["REDIRECT_URI"]
 SCOPE = "user-library-read user-library-modify user-read-currently-playing"
@@ -19,28 +23,25 @@ if "sp_oauth" not in st.session_state:
 sp_oauth = st.session_state.sp_oauth
 query_params = st.query_params
 
-if "code" in query_params:
+if "code" in query_params and "access_token" not in st.session_state:
     code = query_params["code"][0]
-
-    # Exchange the code for token only once
-    if "access_token" not in st.session_state:
-        try:
-            token_info = sp_oauth.get_access_token(code)
-            st.session_state.access_token = token_info["access_token"]
-            # Clear the 'code' param so it doesn't reuse on rerun
-            st.experimental_set_query_params()
-        except Exception as e:
-            st.error(f"Auth Error: {e}")
-            st.stop()
-else:
-    if "access_token" not in st.session_state:
-        auth_url = sp_oauth.get_authorize_url()
-        st.markdown(f"[Authorize with Spotify]({auth_url})")
+    try:
+        token_info = sp_oauth.get_access_token(code)
+        st.session_state.access_token = token_info["access_token"]
+        st.experimental_set_query_params()  # Clear URL params
+        st.experimental_rerun()  # Rerun to refresh app state
+    except Exception as e:
+        st.error(f"Auth Error: {e}")
         st.stop()
 
-# Now you have access token in session_state
+if "access_token" not in st.session_state:
+    auth_url = sp_oauth.get_authorize_url()
+    st.markdown(f"[Authorize with Spotify]({auth_url})")
+    st.stop()
+
 sp = spotipy.Spotify(auth=st.session_state.access_token)
 
+st.write("✅ Authorized! You can now call Spotify API.")
 
 # ------------- APP UI + FUNCTIONALITY -------------
 
