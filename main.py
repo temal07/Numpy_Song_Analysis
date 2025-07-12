@@ -7,12 +7,14 @@ from spotipy.exceptions import SpotifyException
 
 CLIENT_ID = st.secrets["CLIENT_ID"]
 REDIRECT_URI = st.secrets["REDIRECT_URI"]
-
+"""
 sp_oauth = SpotifyPKCE(
     client_id=CLIENT_ID,
     redirect_uri=REDIRECT_URI,
     scope="user-library-read user-library-modify user-read-currently-playing"
 )
+
+"""
 
 if "sp_oauth" not in st.session_state:
     st.session_state.sp_oauth = SpotifyPKCE(
