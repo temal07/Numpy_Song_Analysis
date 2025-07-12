@@ -14,19 +14,32 @@ sp_oauth = SpotifyPKCE(
     scope="user-library-read user-library-modify user-read-currently-playing"
 )
 
-# Get authorization code from URL params after Spotify redirect
+if "sp_oauth" not in st.session_state:
+    st.session_state.sp_oauth = SpotifyPKCE(
+        client_id=CLIENT_ID,
+        redirect_uri=REDIRECT_URI,
+        scope="user-library-read user-library-modify user-read-currently-playing"
+    )
+
+sp_oauth = st.session_state.sp_oauth
+
+# Handle callback after redirect
 query_params = st.experimental_get_query_params()
+
 if "code" in query_params:
     code = query_params["code"][0]
-    token_info = sp_oauth.get_access_token(code)
-    access_token = token_info["access_token"]
-    sp = spotipy.Spotify(auth=access_token)
+    try:
+        token_info = sp_oauth.get_access_token(code)
+        access_token = token_info["access_token"]
+        sp = spotipy.Spotify(auth=access_token)
+    except Exception as e:
+        st.error(f"Auth Error: {e}")
+        st.stop()
 else:
     auth_url = sp_oauth.get_authorize_url()
     st.write("## 🎵 Authorize this app to access your Spotify account")
     st.markdown(f"[Click here to authorize 🎶]({auth_url})")
     st.stop()
-
 # ------------- APP UI + FUNCTIONALITY -------------
 
 st.title("🎶 Spotify Track Info & Liked Songs Manager")
