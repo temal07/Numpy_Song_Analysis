@@ -5,7 +5,6 @@ from spotipy.exceptions import SpotifyException
 
 # ------------- PKCE AUTH SETUP -------------
 
-
 CLIENT_ID = st.secrets["CLIENT_ID"]
 REDIRECT_URI = st.secrets["REDIRECT_URI"]
 SCOPE = "user-library-read user-library-modify user-read-currently-playing"
@@ -18,27 +17,31 @@ if "sp_oauth" not in st.session_state:
     )
 
 sp_oauth = st.session_state.sp_oauth
-
 query_params = st.query_params
 
 if "code" in query_params:
     code = query_params["code"][0]
-    try:
-        # Exchange code for token using the same sp_oauth (which has code_verifier)
-        token_info = sp_oauth.get_access_token(code)
-        access_token = token_info["access_token"]
-        sp = spotipy.Spotify(auth=access_token)
 
-        # Now your app logic with sp below
-        st.write("Authentication successful! You can now use the Spotify API.")
-
-    except Exception as e:
-        st.error(f"Auth Error: {e}")
-        st.stop()
+    # Exchange the code for token only once
+    if "access_token" not in st.session_state:
+        try:
+            token_info = sp_oauth.get_access_token(code)
+            st.session_state.access_token = token_info["access_token"]
+            # Clear the 'code' param so it doesn't reuse on rerun
+            st.experimental_set_query_params()
+        except Exception as e:
+            st.error(f"Auth Error: {e}")
+            st.stop()
 else:
-    auth_url = sp_oauth.get_authorize_url()
-    st.markdown(f"[Authorize with Spotify]({auth_url})")
-    st.stop()
+    if "access_token" not in st.session_state:
+        auth_url = sp_oauth.get_authorize_url()
+        st.markdown(f"[Authorize with Spotify]({auth_url})")
+        st.stop()
+
+# Now you have access token in session_state
+sp = spotipy.Spotify(auth=st.session_state.access_token)
+
+
 # ------------- APP UI + FUNCTIONALITY -------------
 
 st.title("🎶 Spotify Track Info & Liked Songs Manager")
