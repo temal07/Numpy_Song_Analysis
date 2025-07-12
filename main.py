@@ -26,7 +26,7 @@ if "sp_oauth" not in st.session_state:
 sp_oauth = st.session_state.sp_oauth
 
 # Handle callback after redirect
-query_params = st.query_params()
+query_params = st.experimental_get_query_params()
 
 if "code" in query_params:
     code = query_params["code"][0]
