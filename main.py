@@ -73,7 +73,7 @@ if input_song_url:
 st.markdown("---")
 
 # ------------- Check/Add Song to Liked Songs -------------
-track_url_input = st.text_input("Enter Track URL to check if in Liked Songs:")
+track_url_input = st.text_input("Enter Song URL to check if in Liked Songs:")
 
 if track_url_input:
     try:
